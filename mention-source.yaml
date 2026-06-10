@@ -1,0 +1,47 @@
+name: lark
+version: 0.3.0
+description: >
+  Feishu (Lark) resources as mention sources. Exposes a `search` capability
+  (over the lark-cli subprocess) for group chats, people, and docs, and ships
+  an agent-side resolver skill so the agent can act on the handles those
+  mentions produce. HTTP-agnostic — the backplane's mention-sources gateway
+  adapts `search` into GET /mention-sources/lark/search.
+
+# Capability: async search(rtype, query, limit) -> {ok, items:[{id,title,detail,payload}]}
+# rtype is one of the mention_resource types below (doc | chat | user).
+
+# Mentionable resources contributed to GET /hermes/mention-resources.
+# Each becomes a generic @-provider in the composer: registry key
+# "lark.<type>", search via /mention-sources/lark/search?type=<type>, and the
+# picked resource expands (frontend send layer) via `serialize` into a
+# self-describing reference line the agent resolves with `resolver_skill`.
+#
+# `group` is the composer @-menu section header each type is filed under
+# (raw label, clustered by exact string — matching another source's string
+# joins its section). Omit it to fall back to a top-level source `group`
+# default (if set), then to the source name. Here we give each type its
+# own section.
+mention_resources:
+  - type: doc
+    label: 飞书文档
+    icon: lark-doc
+    group: 飞书文档
+    fields: [url, title]
+    serialize: "[飞书文档] {title} — {url}"
+  - type: chat
+    label: 飞书群
+    icon: lark-chat
+    group: 飞书群聊
+    fields: [chat_id, name]
+    serialize: "[飞书群] {name} (chat_id={chat_id})"
+  - type: user
+    label: 飞书联系人
+    icon: lark-user
+    group: 飞书联系人
+    fields: [p2p_chat_id, name]
+    serialize: "[飞书联系人] {name} (chat={p2p_chat_id})"
+
+resolver_skill: skills/lark-resolve.md
+
+requires:
+  binaries: [lark-cli]
