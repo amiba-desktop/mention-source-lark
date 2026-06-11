@@ -1,5 +1,5 @@
 name: lark
-version: 0.4.0
+version: 0.4.1
 description: >
   Feishu (Lark) resources as mention sources. Exposes a `search` capability
   (over the lark-cli subprocess) for group chats, people, and docs, and ships
@@ -32,7 +32,7 @@ mention_resources:
     icon: lark-doc
     group: 飞书文档
     fields: [url, title]
-    serialize: "[飞书文档] {title} — {url}"
+    serialize: "(飞书文档: {title} · {url})"
     requires_query: true
     empty_hint: 输入关键词搜索飞书文档
   - type: chat
@@ -40,13 +40,13 @@ mention_resources:
     icon: lark-chat
     group: 飞书群聊
     fields: [chat_id, name]
-    serialize: "[飞书群] {name} (chat_id={chat_id})"
+    serialize: "(飞书群: {name} · {chat_id})"
   - type: user
     label: 飞书联系人
     icon: lark-user
     group: 飞书联系人
     fields: [p2p_chat_id, name]
-    serialize: "[飞书联系人] {name} (chat={p2p_chat_id})"
+    serialize: "(飞书联系人: {name} · {p2p_chat_id})"
     requires_query: true
     empty_hint: 输入姓名搜索飞书联系人
 

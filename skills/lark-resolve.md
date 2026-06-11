@@ -8,8 +8,8 @@ description: >
   on it.
 when_to_use: >
   The user's message contains a Feishu handle produced by an @-mention,
-  i.e. a line like "[飞书文档] <title> — <url>", "[飞书群] <name>
-  (chat_id=...)", or "[飞书联系人] <name> (chat=...)", AND the task needs
+  i.e. a line like "(飞书文档: <title> · <url>)", "(飞书群: <name> ·
+  <chat_id>)", or "(飞书联系人: <name> · <p2p_chat_id>)", AND the task needs
   that resource's content or an action against it (read the doc, summarize
   the group's recent messages, send to that person, etc.).
 ---
@@ -38,9 +38,9 @@ installing and authenticating it for their workspace.
 
 | Looks like | Type | Key identifier |
 |---|---|---|
-| `[飞书文档] <title> — <url>` | doc / sheet / wiki | the `<url>` |
-| `[飞书群] <name> (chat_id=<id>)` | group chat | the `chat_id` |
-| `[飞书联系人] <name> (chat=<p2p_chat_id>)` | person | their 1:1 `p2p_chat_id` |
+| `(飞书文档: <title> · <url>)` | doc / sheet / wiki | the `<url>` |
+| `(飞书群: <name> · <chat_id>)` | group chat | the `chat_id` |
+| `(飞书联系人: <name> · <p2p_chat_id>)` | person | their 1:1 `p2p_chat_id` |
 
 ## How to resolve
 
