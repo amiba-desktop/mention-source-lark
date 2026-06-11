@@ -195,8 +195,10 @@ async def _list_chats(limit: int) -> Dict[str, Any]:
 
 
 async def _search_users(query: str, limit: int) -> Dict[str, Any]:
+    # contact +search-user caps --page-size at 30 (chat/doc allow 50).
     res = await _run_lark(
-        ["contact", "+search-user", "--queries", query, "--page-size", str(limit), "--format", "json"]
+        ["contact", "+search-user", "--queries", query,
+         "--page-size", str(min(limit, 30)), "--format", "json"]
     )
     if not res.get("ok"):
         return {"items": [], "error": res.get("error")}
