@@ -1,5 +1,5 @@
 name: lark
-version: 0.3.0
+version: 0.4.0
 description: >
   Feishu (Lark) resources as mention sources. Exposes a `search` capability
   (over the lark-cli subprocess) for group chats, people, and docs, and ships
@@ -21,6 +21,11 @@ description: >
 # joins its section). Omit it to fall back to a top-level source `group`
 # default (if set), then to the source name. Here we give each type its
 # own section.
+#
+# `requires_query: true` — this type's search can't list a default set (Feishu
+# doc/contact search demands a keyword). On an empty query the composer shows
+# `empty_hint` as the category's empty state instead of an empty group. `chat`
+# omits it: it lists the user's joined groups on an empty query (see source.py).
 mention_resources:
   - type: doc
     label: 飞书文档
@@ -28,6 +33,8 @@ mention_resources:
     group: 飞书文档
     fields: [url, title]
     serialize: "[飞书文档] {title} — {url}"
+    requires_query: true
+    empty_hint: 输入关键词搜索飞书文档
   - type: chat
     label: 飞书群
     icon: lark-chat
@@ -40,6 +47,8 @@ mention_resources:
     group: 飞书联系人
     fields: [p2p_chat_id, name]
     serialize: "[飞书联系人] {name} (chat={p2p_chat_id})"
+    requires_query: true
+    empty_hint: 输入姓名搜索飞书联系人
 
 resolver_skill: skills/lark-resolve.md
 

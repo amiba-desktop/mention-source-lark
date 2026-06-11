@@ -144,15 +144,15 @@ def _first_list(node: Any, keys: tuple) -> List[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-async def _search_chats(query: str, limit: int) -> Dict[str, Any]:
-    res = await _run_lark(
-        ["im", "+chat-search", "--query", query, "--page-size", str(limit), "--format", "json"]
-    )
-    if not res.get("ok"):
-        return {"items": [], "error": res.get("error")}
+def _map_chats(data: Any) -> List[Dict[str, Any]]:
+    """Shape a lark-cli chat payload into ``{id,title,detail,payload}`` items.
+
+    Shared by keyword search (``im +chat-search``) and the keyword-free default
+    listing (``im chats list``) — both nest their chats under ``chats``/``items``.
+    """
     items: List[Dict[str, Any]] = []
     seen = set()
-    for c in _first_list(res["data"], ("chats", "items")):
+    for c in _first_list(data, ("chats", "items")):
         cid = c.get("chat_id") or c.get("id")
         name = c.get("name") or c.get("chat_name")
         if not isinstance(cid, str) or not isinstance(name, str) or cid in seen:
@@ -167,7 +167,31 @@ async def _search_chats(query: str, limit: int) -> Dict[str, Any]:
                 "payload": {"chat_id": cid, "name": name},
             }
         )
-    return {"items": items, "error": None}
+    return items
+
+
+async def _search_chats(query: str, limit: int) -> Dict[str, Any]:
+    res = await _run_lark(
+        ["im", "+chat-search", "--query", query, "--page-size", str(limit), "--format", "json"]
+    )
+    if not res.get("ok"):
+        return {"items": [], "error": res.get("error")}
+    return {"items": _map_chats(res["data"]), "error": None}
+
+
+async def _list_chats(limit: int) -> Dict[str, Any]:
+    """Keyword-free default: the user's joined group chats (``im chats list``).
+
+    Chat is the one entity type with a no-query listing, so the composer can
+    show a default batch the moment ``@`` opens (doc/user search demand a term).
+    """
+    res = await _run_lark(
+        ["im", "chats", "list", "--as", "user",
+         "--params", json.dumps({"page_size": limit}), "--format", "json"]
+    )
+    if not res.get("ok"):
+        return {"items": [], "error": res.get("error")}
+    return {"items": _map_chats(res["data"]), "error": None}
 
 
 async def _search_users(query: str, limit: int) -> Dict[str, Any]:
@@ -246,17 +270,24 @@ _SEARCHERS = {
 async def search(rtype: str, query: str, limit: int = 8) -> Dict[str, Any]:
     """Search one Feishu resource type. Returns ``{ok, items, error?}``.
 
-    Unknown / missing ``rtype`` returns an empty result (graceful — the
-    composer just shows no candidates), never an error.
+    Empty query: ``chat`` lists the user's joined groups (a useful default the
+    moment ``@`` opens); ``doc``/``user`` need a keyword (declared
+    ``requires_query`` in the manifest) so they return empty and the composer
+    shows their ``empty_hint``. Unknown / missing ``rtype`` returns empty
+    (graceful — the composer just shows no candidates), never an error.
     """
     query = (query or "").strip()
-    if not query:
-        return {"ok": True, "items": []}
     searcher = _SEARCHERS.get(rtype)
     if searcher is None:
         return {"ok": True, "items": []}
-    limit = max(1, min(20, int(limit or 8)))
-    r = await searcher(query, limit)
+    limit = max(1, min(50, int(limit or 8)))
+    if not query:
+        if rtype == "chat":
+            r = await _list_chats(limit)
+        else:
+            return {"ok": True, "items": []}
+    else:
+        r = await searcher(query, limit)
     payload: Dict[str, Any] = {"ok": True, "items": r["items"]}
     if not r["items"] and r.get("error"):
         payload["error"] = r["error"]
